@@ -3,7 +3,7 @@ import 'screens/movie_list_screen.dart';
 import 'screens/favorites_screen.dart';
 
 void main() {
-  runApp(MovieApp());
+  runApp(const MovieApp());
 }
 
 class MovieApp extends StatelessWidget {
