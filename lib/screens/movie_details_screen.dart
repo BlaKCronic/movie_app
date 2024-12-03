@@ -6,17 +6,17 @@ class MovieDetailsScreen extends StatelessWidget {
   final int movieId;
   final ApiService apiService = ApiService();
 
-  MovieDetailsScreen({required this.movieId});
+  MovieDetailsScreen({super.key, required this.movieId});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Detalles de la Película')),
+      appBar: AppBar(title: const Text('Detalles de la Película')),
       body: FutureBuilder<Map<String, dynamic>>(
         future: apiService.fetchMovieDetails(movieId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else {
@@ -39,21 +39,21 @@ class MovieDetailsScreen extends StatelessWidget {
                       padding: const EdgeInsets.all(16.0),
                       child: Text(
                         movie['title'],
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                     ),
                     RatingBarIndicator(
                       rating: movie['vote_average'] / 2,
                       itemCount: 5,
                       itemSize: 30.0,
-                      physics: BouncingScrollPhysics(),
-                      itemBuilder: (context, _) => Icon(Icons.star, color: Colors.amber),
+                      physics: const BouncingScrollPhysics(),
+                      itemBuilder: (context, _) => const Icon(Icons.star, color: Colors.amber),
                     ),
                     Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Text(
                         movie['overview'],
-                        style: TextStyle(fontSize: 16, color: Colors.white),
+                        style: const TextStyle(fontSize: 16, color: Colors.white),
                       ),
                     ),
                   ],

@@ -5,15 +5,17 @@ import 'movie_details_screen.dart';
 class MovieListScreen extends StatelessWidget {
   final ApiService apiService = ApiService();
 
+  MovieListScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Películas Populares')),
+      appBar: AppBar(title: const Text('Películas Populares')),
       body: FutureBuilder<List<dynamic>>(
         future: apiService.fetchMovies(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else {
