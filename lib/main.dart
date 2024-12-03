@@ -7,6 +7,8 @@ void main() {
 }
 
 class MovieApp extends StatelessWidget {
+  const MovieApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -18,7 +20,7 @@ class MovieApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => MovieListScreen(),
-        '/favorites': (context) => FavoritesScreen(),
+        '/favorites': (context) => const FavoritesScreen(),
       },
     );
   }
