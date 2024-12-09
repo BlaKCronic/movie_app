@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'screens/movie_list_screen.dart';
-import 'screens/favorites_screen.dart';
 
 void main() {
-  runApp(const MovieApp());
+  runApp(const MoviesApp());
 }
 
-class MovieApp extends StatelessWidget {
-  const MovieApp({super.key});
+class MoviesApp extends StatelessWidget {
+  const MoviesApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,8 +18,7 @@ class MovieApp extends StatelessWidget {
       ),
       initialRoute: '/',
       routes: {
-        '/': (context) => MovieListScreen(),
-        '/favorites': (context) => const FavoritesScreen(),
+        '/': (context) => MovieList(),
       },
     );
   }

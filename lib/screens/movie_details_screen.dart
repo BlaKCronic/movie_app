@@ -1,120 +1,215 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_rating_bar/flutter_rating_bar.dart';
-import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'package:youtube_player_iframe/youtube_player_iframe.dart'; // Importa la librería de YouTube Player
 import './services/api_service.dart';
 
-class MovieDetailsScreen extends StatelessWidget {
+class MovieDetails extends StatefulWidget {
   final int movieId;
-  final ApiService apiService = ApiService();
 
-  MovieDetailsScreen({super.key, required this.movieId});
+  const MovieDetails({super.key, required this.movieId});
+
+  @override
+  _MovieDetailsState createState() => _MovieDetailsState();
+}
+
+class _MovieDetailsState extends State<MovieDetails> {
+  late Future<Map<String, dynamic>> _movieDetails;
+  late Future<List<dynamic>> _movieCredits;
+  late Future<List<dynamic>> _movieTrailers;
+  late YoutubePlayerController _youtubeController;
+
+  @override
+  void initState() {
+    super.initState();
+    _movieDetails = ApiService().fetchMovieDetails(widget.movieId);
+    _movieCredits = ApiService().fetchMovieCredits(widget.movieId);
+    _movieTrailers = ApiService().fetchMovieVideos(widget.movieId);
+
+    // Inicializamos el controlador de YouTube
+    _youtubeController = YoutubePlayerController(
+      params: const YoutubePlayerParams(
+        showFullscreenButton: true,
+        playsInline: true,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _youtubeController.close(); // Cerramos el controlador al salir
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Detalles de la Película')),
-      body: FutureBuilder<Map<String, dynamic>>(
-        future: apiService.fetchMovieDetails(movieId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else {
-            final movie = snapshot.data!;
-            return SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Stack(
+      appBar: AppBar(
+        title: const Text('Detalles de la película'),
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // FutureBuilder para los detalles de la película
+              FutureBuilder<Map<String, dynamic>>(
+                future: _movieDetails,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(
+                        child: Text('Error al cargar los detalles: ${snapshot.error}'));
+                  } else if (!snapshot.hasData || snapshot.data == null) {
+                    return const Center(child: Text('No se encontraron detalles.'));
+                  }
+
+                  final movie = snapshot.data!;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Image.network(
-                        'https://image.tmdb.org/t/p/w500${movie['poster_path']}',
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        height: 250,
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(20.0),
+                        child: Image.network(
+                          'https://image.tmdb.org/t/p/w500${movie['poster_path']}',
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: 250.0,
+                        ),
                       ),
-                      Container(
-                        color: Colors.black.withOpacity(0.5),
-                        height: 250,
+                      const SizedBox(height: 12),
+                      Text(
+                        movie['title'],
+                        style: const TextStyle(
+                            fontSize: 22.0, fontWeight: FontWeight.bold),
                       ),
-                      Positioned(
-                        bottom: 16.0,
-                        left: 16.0,
-                        child: Text(
-                          movie['title'],
-                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Fecha de estreno: ${movie['release_date']}',
+                        style: const TextStyle(color: Colors.black),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Descripción:',
+                        style: const TextStyle(
+                            fontSize: 18.0, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        movie['overview'] ?? 'No disponible.',
+                        style: const TextStyle(color: Colors.black),
+                      ),
+                    ],
+                  );
+                },
+              ),
+
+              const SizedBox(height: 20),
+
+              // FutureBuilder para los créditos de la película
+              FutureBuilder<List<dynamic>>(
+                future: _movieCredits,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(
+                        child: Text('Error al cargar los créditos: ${snapshot.error}'));
+                  } else if (!snapshot.hasData || snapshot.data == null) {
+                    return const Center(child: Text('No se encontraron créditos.'));
+                  }
+
+                  final credits = snapshot.data!;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Créditos:',
+                        style: TextStyle(
+                            fontSize: 18.0, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        height: 120,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: credits.length,
+                          itemBuilder: (context, index) {
+                            final credit = credits[index];
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: Column(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundImage: NetworkImage(
+                                      'https://image.tmdb.org/t/p/w500${credit['profile_path']}',
+                                    ),
+                                    radius: 45.0,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    credit['name'],
+                                    style: const TextStyle(color: Colors.white70),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text(
-                      movie['overview'],
-                      style: const TextStyle(fontSize: 16, color: Colors.black),
-                    ),
-                  ),
-                  RatingBarIndicator(
-                    rating: movie['vote_average'] / 2,
-                    itemCount: 5,
-                    itemSize: 30.0,
-                    physics: const BouncingScrollPhysics(),
-                    itemBuilder: (context, _) => const Icon(Icons.star, color: Colors.amber),
-                  ),
-                  const SizedBox(height: 20),
-                  const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Text(
-                      'Trailers',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  FutureBuilder<List<dynamic>>(
-                    future: apiService.fetchMovieVideos(movieId),
-                    builder: (context, videoSnapshot) {
-                      if (videoSnapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      } else if (videoSnapshot.hasError) {
-                        return Center(child: Text('Error: ${videoSnapshot.error}'));
-                      } else {
-                        final videos = videoSnapshot.data!;
-                        return videos.isEmpty
-                            ? const Center(child: Text('No hay trailers disponibles.'))
-                            : ListView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: videos.length,
-                                itemBuilder: (context, index) {
-                                  final video = videos[index];
-                                  if (video['site'] == 'YouTube') {
-                                    final videoId = video['key'];
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                                      child: YoutubePlayer(
-                                        controller: YoutubePlayerController(
-                                          initialVideoId: videoId,
-                                          flags: const YoutubePlayerFlags(
-                                            autoPlay: false,
-                                            mute: false,
-                                          ),
-                                        ),
-                                        showVideoProgressIndicator: true,
-                                      ),
-                                    );
-                                  } else {
-                                    return const SizedBox.shrink();
-                                  }
-                                },
-                              );
-                      }
-                    },
-                  ),
-                ],
+                  );
+                },
               ),
-            );
-          }
-        },
+
+              const SizedBox(height: 20),
+
+              // FutureBuilder para los trailers
+              FutureBuilder<List<dynamic>>(
+                future: _movieTrailers,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(
+                        child: Text('Error al cargar los trailers: ${snapshot.error}'));
+                  } else if (!snapshot.hasData || snapshot.data == null) {
+                    return const Center(child: Text('No se encontraron trailers.'));
+                  }
+
+                  final trailers = snapshot.data!;
+                  if (trailers.isEmpty) {
+                    return const Center(child: Text('No hay trailers disponibles.'));
+                  }
+
+                  final trailerKey = trailers[0]['key'];
+                  _youtubeController.loadVideoById(videoId: trailerKey);
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Trailer:',
+                        style: TextStyle(
+                            fontSize: 18.0, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 10),
+                      SizedBox(
+                        height: 300.0,
+                        width: 500,
+                        child: YoutubePlayer(
+                          controller: _youtubeController,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
