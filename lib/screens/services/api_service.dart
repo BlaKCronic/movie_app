@@ -74,7 +74,7 @@ class ApiService {
     final query = Uri.encodeComponent('$movieTitle trailer');
   
     // Construye la URL de la API de YouTube para buscar el trailer
-    final url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&q=$query&type=video&key=$youtubeApiKey';
+    final url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&q=$query&type=video&key=$apiKey';
 
     // Realiza la solicitud HTTP a YouTube
     final response = await http.get(Uri.parse(url));
