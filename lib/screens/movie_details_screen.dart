@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 import './services/api_service.dart';
@@ -47,41 +46,29 @@ class _MovieDetailsState extends State<MovieDetails> {
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
       ),
-      body: FutureBuilder<Map<String, dynamic>>(
-        future: _movieDetails,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(
-                child: Text('Error al cargar los detalles: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data == null) {
-            return const Center(child: Text('No se encontraron detalles.'));
-          }
-
-          final movie = snapshot.data!;
-          return Stack(
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Fondo difuminado del póster
-              Positioned.fill(
-                child: Image.network(
-                  'https://image.tmdb.org/t/p/w500${movie['poster_path']}',
-                  fit: BoxFit.cover,
-                ),
-              ),
-              Positioned.fill(
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                  child: Container(color: Colors.black.withOpacity(0.5)),
-                ),
-              ),
-              SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
+              // FutureBuilder para los detalles de la película
+              FutureBuilder<Map<String, dynamic>>(
+                future: _movieDetails,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(
+                        child: Text('Error al cargar los detalles: ${snapshot.error}'));
+                  } else if (!snapshot.hasData || snapshot.data == null) {
+                    return const Center(child: Text('No se encontraron detalles.'));
+                  }
+
+                  final movie = snapshot.data!;
+                  return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Detalles principales
                       ClipRRect(
                         borderRadius: BorderRadius.circular(20.0),
                         child: Image.network(
@@ -95,149 +82,130 @@ class _MovieDetailsState extends State<MovieDetails> {
                       Text(
                         movie['title'],
                         style: const TextStyle(
-                            fontSize: 22.0, fontWeight: FontWeight.bold, color: Colors.white),
+                            fontSize: 22.0, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'Fecha de estreno: ${movie['release_date']}',
-                        style: const TextStyle(color: Colors.white70),
+                        style: const TextStyle(color: Colors.black),
                       ),
                       const SizedBox(height: 12),
                       Text(
                         'Descripción:',
                         style: const TextStyle(
-                            fontSize: 18.0, fontWeight: FontWeight.bold, color: Colors.white),
+                            fontSize: 18.0, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         movie['overview'] ?? 'No disponible.',
-                        style: const TextStyle(color: Colors.white70),
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // Créditos
-                      FutureBuilder<List<dynamic>>(
-                        future: _movieCredits,
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return const Center(child: CircularProgressIndicator());
-                          } else if (snapshot.hasError) {
-                            return Center(
-                                child: Text('Error al cargar los créditos: ${snapshot.error}'));
-                          } else if (!snapshot.hasData || snapshot.data == null) {
-                            return const Center(child: Text('No se encontraron créditos.'));
-                          }
-
-                          final credits = snapshot.data!;
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Reparto:',
-                                style: TextStyle(
-                                    fontSize: 18.0, fontWeight: FontWeight.bold, color: Colors.white),
-                              ),
-                              const SizedBox(height: 8),
-                              SizedBox(
-                                height: 150,
-                                child: ListView.builder(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: credits.length,
-                                  itemBuilder: (context, index) {
-                                    final credit = credits[index];
-                                    return Padding(
-                                      padding: const EdgeInsets.only(right: 8.0),
-                                      child: Column(
-                                        children: [
-                                          ClipRRect(
-                                            borderRadius: BorderRadius.circular(12),
-                                            child: Container(
-                                              width: 80,
-                                              height: 100,
-                                              decoration: BoxDecoration(
-                                                color: Colors.grey[800],
-                                                image: credit['profile_path'] != null
-                                                    ? DecorationImage(
-                                                        image: NetworkImage(
-                                                          'https://image.tmdb.org/t/p/w500${credit['profile_path']}',
-                                                        ),
-                                                        fit: BoxFit.cover,
-                                                      )
-                                                    : null,
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(height: 8),
-                                          SizedBox(
-                                            width: 80,
-                                            child: Text(
-                                              credit['name'],
-                                              style: const TextStyle(color: Colors.white70),
-                                              overflow: TextOverflow.ellipsis,
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Trailers
-                      FutureBuilder<List<dynamic>>(
-                        future: _movieTrailers,
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return const Center(child: CircularProgressIndicator());
-                          } else if (snapshot.hasError) {
-                            return Center(
-                                child: Text('Error al cargar los trailers: ${snapshot.error}'));
-                          } else if (!snapshot.hasData || snapshot.data == null) {
-                            return const Center(child: Text('No se encontraron trailers.'));
-                          }
-
-                          final trailers = snapshot.data!;
-                          if (trailers.isEmpty) {
-                            return const Center(child: Text('No hay trailers disponibles.'));
-                          }
-
-                          final trailerKey = trailers[0]['key'];
-                          _youtubeController.loadVideoById(videoId: trailerKey);
-
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Trailer:',
-                                style: TextStyle(
-                                    fontSize: 18.0, fontWeight: FontWeight.bold, color: Colors.white),
-                              ),
-                              const SizedBox(height: 10),
-                              SizedBox(
-                                height: 300.0,
-                                width: 500,
-                                child: YoutubePlayer(
-                                  controller: _youtubeController,
-                                ),
-                              ),
-                            ],
-                          );
-                        },
+                        style: const TextStyle(color: Colors.black),
                       ),
                     ],
-                  ),
-                ),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 20),
+              FutureBuilder<List<dynamic>>(
+                future: _movieCredits,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(
+                        child: Text('Error al cargar los créditos: ${snapshot.error}'));
+                  } else if (!snapshot.hasData || snapshot.data == null) {
+                    return const Center(child: Text('No se encontraron créditos.'));
+                  }
+
+                  final credits = snapshot.data!;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Créditos:',
+                        style: TextStyle(
+                            fontSize: 18.0, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        height: 120,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: credits.length,
+                          itemBuilder: (context, index) {
+                            final credit = credits[index];
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: Column(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundImage: NetworkImage(
+                                      'https://image.tmdb.org/t/p/w500${credit['profile_path']}',
+                                    ),
+                                    radius: 45.0,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    credit['name'],
+                                    style: const TextStyle(color: Colors.white70),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+
+              const SizedBox(height: 20),
+
+              FutureBuilder<List<dynamic>>(
+                future: _movieTrailers,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(
+                        child: Text('Error al cargar los trailers: ${snapshot.error}'));
+                  } else if (!snapshot.hasData || snapshot.data == null) {
+                    return const Center(child: Text('No se encontraron trailers.'));
+                  }
+
+                  final trailers = snapshot.data!;
+                  if (trailers.isEmpty) {
+                    return const Center(child: Text('No hay trailers disponibles.'));
+                  }
+
+                  final trailerKey = trailers[0]['key'];
+                  _youtubeController.loadVideoById(videoId: trailerKey);
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Trailer:',
+                        style: TextStyle(
+                            fontSize: 18.0, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 10),
+                      SizedBox(
+                        height: 300.0,
+                        width: 500,
+                        child: YoutubePlayer(
+                          controller: _youtubeController,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ],
-          );
-        },
+          ),
+        ),
       ),
     );
   }

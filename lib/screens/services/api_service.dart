@@ -44,13 +44,15 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      return data['results'];
+      // Filtra para obtener solo videos relevantes, como trailers
+      return data['results']
+          .where((video) => video['type'] == 'Trailer' && video['site'] == 'YouTube')
+          .toList();
     } else {
       throw Exception('Error al cargar videos');
     }
   }
 
-  // Método para obtener las películas por una lista de IDs
   Future<List<dynamic>> fetchMoviesByIds(List<int> movieIds) async {
     final List<dynamic> movies = [];
 
@@ -66,35 +68,5 @@ class ApiService {
     }
 
     return movies;
-  }
-
-  // Método para obtener el trailer de YouTube basado en el título de la película
-  Future<String?> fetchYouTubeTrailer(String movieTitle) async {
-    // Prepara el título de la película para ser usado en una consulta
-    final query = Uri.encodeComponent('$movieTitle trailer');
-  
-    // Construye la URL de la API de YouTube para buscar el trailer
-    final url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&q=$query&type=video&key=$apiKey';
-
-    // Realiza la solicitud HTTP a YouTube
-    final response = await http.get(Uri.parse(url));
-
-    // Verifica si la respuesta es exitosa
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-
-      // Si se encuentran elementos (videos) en la respuesta
-      if (data['items'].isNotEmpty) {
-        // Obtiene el videoId del primer video de los resultados de YouTube
-        final videoId = data['items'][0]['id']['videoId'];
-        return videoId;
-      } else {
-        // Si no se encuentra un trailer, retorna null
-        return null;
-      }
-    } else {
-      // Si ocurre un error en la respuesta, lanza una excepción
-      throw Exception('Error al buscar el trailer en YouTube');
-    }
   }
 }

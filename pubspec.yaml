@@ -37,7 +37,7 @@ dependencies:
   youtube_player_flutter: ^9.1.1
   url_launcher: ^6.0.10
   youtube_player_iframe: ^5.2.1
-  google_fonts: ^5.0.0
+  google_fonts: ^6.2.1
 
 dev_dependencies:
   flutter_test:
